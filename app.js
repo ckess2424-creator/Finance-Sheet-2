@@ -1,7 +1,10 @@
 class FinanceApp {
   constructor() {
-    this.expenses = [];
-    this.balance = 0;
+    this.data = {
+      expenses: { usd: [], ils: [] },
+      payslips: { usd: [], ils: [] },
+      balances: { usd: 0, ils: 0 }
+    };
 
     this.load();
     this.initTabs();
@@ -10,18 +13,12 @@ class FinanceApp {
 
   // STORAGE
   save() {
-    localStorage.setItem("financeData", JSON.stringify({
-      expenses: this.expenses,
-      balance: this.balance
-    }));
+    localStorage.setItem("financeData", JSON.stringify(this.data));
   }
 
   load() {
-    const data = JSON.parse(localStorage.getItem("financeData"));
-    if (data) {
-      this.expenses = data.expenses || [];
-      this.balance = data.balance || 0;
-    }
+    const saved = JSON.parse(localStorage.getItem("financeData"));
+    if (saved) this.data = saved;
   }
 
   // TABS
@@ -39,62 +36,108 @@ class FinanceApp {
 
   // EXPENSES
   addExpense() {
+    const currency = document.getElementById("expenseCurrency").value;
     const category = document.getElementById("category").value;
     const amount = parseFloat(document.getElementById("amount").value);
 
-    if (!category || isNaN(amount)) {
-      alert("Enter valid data");
-      return;
-    }
+    if (!category || isNaN(amount)) return alert("Fill all fields");
 
-    this.expenses.push({ id: Date.now(), category, amount });
+    this.data.expenses[currency].push({
+      id: Date.now(),
+      category,
+      amount
+    });
+
     this.save();
     this.render();
-
-    document.getElementById("category").value = "";
-    document.getElementById("amount").value = "";
   }
 
-  deleteExpense(id) {
-    this.expenses = this.expenses.filter(e => e.id !== id);
+  deleteExpense(currency, id) {
+    this.data.expenses[currency] =
+      this.data.expenses[currency].filter(e => e.id !== id);
+
+    this.save();
+    this.render();
+  }
+
+  // PAYSLIPS
+  addPayslip() {
+    const currency = document.getElementById("payslipCurrency").value;
+    const income = parseFloat(document.getElementById("income").value);
+    const tax = parseFloat(document.getElementById("tax").value);
+
+    if (isNaN(income) || isNaN(tax)) return alert("Fill all fields");
+
+    this.data.payslips[currency].push({
+      id: Date.now(),
+      income,
+      tax
+    });
+
+    this.save();
+    this.render();
+  }
+
+  deletePayslip(currency, id) {
+    this.data.payslips[currency] =
+      this.data.payslips[currency].filter(p => p.id !== id);
+
     this.save();
     this.render();
   }
 
   // BALANCE
   updateBalance() {
-    const value = parseFloat(document.getElementById("balanceInput").value);
+    const usd = parseFloat(document.getElementById("usdBalance").value) || 0;
+    const ils = parseFloat(document.getElementById("ilsBalance").value) || 0;
 
-    if (isNaN(value)) {
-      alert("Enter a number");
-      return;
-    }
+    this.data.balances.usd = usd;
+    this.data.balances.ils = ils;
 
-    this.balance = value;
     this.save();
     this.render();
   }
 
   // RENDER
   render() {
-    const list = document.getElementById("expensesList");
-    list.innerHTML = "";
+    const expList = document.getElementById("expensesList");
+    expList.innerHTML = "";
 
-    this.expenses.forEach(e => {
-      const div = document.createElement("div");
-      div.className = "item";
+    ["usd", "ils"].forEach(currency => {
+      this.data.expenses[currency].forEach(e => {
+        const div = document.createElement("div");
+        div.className = "item";
 
-      div.innerHTML = `
-        ${e.category} - $${e.amount}
-        <button onclick="app.deleteExpense(${e.id})">X</button>
-      `;
+        div.innerHTML = `
+          ${currency.toUpperCase()} - ${e.category} - ${e.amount}
+          <button onclick="app.deleteExpense('${currency}', ${e.id})">X</button>
+        `;
 
-      list.appendChild(div);
+        expList.appendChild(div);
+      });
     });
 
-    document.getElementById("balanceDisplay").textContent = `$${this.balance}`;
+    const payList = document.getElementById("payslipsList");
+    payList.innerHTML = "";
+
+    ["usd", "ils"].forEach(currency => {
+      this.data.payslips[currency].forEach(p => {
+        const div = document.createElement("div");
+        div.className = "item";
+
+        div.innerHTML = `
+          ${currency.toUpperCase()} - Income: ${p.income} | Tax: ${p.tax}
+          <button onclick="app.deletePayslip('${currency}', ${p.id})">X</button>
+        `;
+
+        payList.appendChild(div);
+      });
+    });
+
+    document.getElementById("balanceDisplay").textContent =
+      `USD: $${this.data.balances.usd} | ILS: ₪${this.data.balances.ils}`;
   }
 }
 
-// START APP
+// START
 const app = new FinanceApp();
