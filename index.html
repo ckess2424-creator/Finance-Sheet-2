@@ -5,11 +5,7 @@
   <title>💰 Finance App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CSS -->
   <link rel="stylesheet" href="styles.css">
-
-  <!-- Chart.js (REQUIRED) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -17,37 +13,61 @@
 <div class="container">
   <h1>💰 Finance Tracker</h1>
 
-  <!-- Tabs -->
+  <!-- TABS -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="expenses">Expenses</button>
+    <button class="tab-btn" data-tab="payslips">Payslips</button>
     <button class="tab-btn" data-tab="balances">Balances</button>
   </div>
 
   <!-- EXPENSES -->
   <div id="expenses" class="tab-content active">
-    <h2>Add Expense</h2>
+    <h2>Expenses</h2>
+
+    <select id="expenseCurrency">
+      <option value="usd">USD</option>
+      <option value="ils">ILS</option>
+    </select>
 
     <input type="text" id="category" placeholder="Category">
     <input type="number" id="amount" placeholder="Amount">
-    <button onclick="app.addExpense()">Add</button>
+
+    <button onclick="app.addExpense()">Add Expense</button>
 
     <div id="expensesList"></div>
   </div>
 
+  <!-- PAYSLIPS -->
+  <div id="payslips" class="tab-content">
+    <h2>Payslips</h2>
+
+    <select id="payslipCurrency">
+      <option value="usd">USD</option>
+      <option value="ils">ILS</option>
+    </select>
+
+    <input type="number" id="income" placeholder="Income">
+    <input type="number" id="tax" placeholder="Tax">
+
+    <button onclick="app.addPayslip()">Add Payslip</button>
+
+    <div id="payslipsList"></div>
+  </div>
+
   <!-- BALANCES -->
   <div id="balances" class="tab-content">
-    <h2>Balance</h2>
+    <h2>Balances</h2>
 
-    <input type="number" id="balanceInput" placeholder="Enter balance">
+    <input type="number" id="usdBalance" placeholder="USD Balance">
+    <input type="number" id="ilsBalance" placeholder="ILS Balance">
+
     <button onclick="app.updateBalance()">Save</button>
 
-    <h3 id="balanceDisplay">$0</h3>
+    <h3 id="balanceDisplay"></h3>
   </div>
 
 </div>
 
-<!-- JS -->
 <script src="app.js"></script>
-
 </body>
 </html>
