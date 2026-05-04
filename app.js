@@ -7,7 +7,12 @@ class FinanceApp {
             balanceHistory: [],
             budgets: { usd: [], ils: [] },
             recurring: [],
-            settings: { emailNotifications: false, cloudSync: false, email: '', exchangeRate: 3.5 }
+            settings: {
+                emailNotifications: false,
+                cloudSync: false,
+                email: '',
+                exchangeRate: 3.5
+            }
         };
 
         this.currentMonth = new Date();
@@ -18,7 +23,9 @@ class FinanceApp {
         this.init();
     }
 
-    // ===== DATA MANAGEMENT =====
+    // ======================
+    // DATA MANAGEMENT
+    // ======================
     loadData() {
         const saved = localStorage.getItem('financeData');
         if (saved) {
@@ -38,15 +45,16 @@ class FinanceApp {
     }
 
     exportData() {
-        const dataStr = JSON.stringify(this.data, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `finance-data-${new Date().toISOString().split('T')[0]}.json`;
-        link.click();
+        const blob = new Blob([JSON.stringify(this.data, null, 2)], {
+            type: 'application/json'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `finance-data-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
         URL.revokeObjectURL(url);
-        alert('Data exported successfully!');
     }
 
     importData() {
@@ -57,13 +65,11 @@ class FinanceApp {
             const reader = new FileReader();
             reader.onload = (event) => {
                 try {
-                    const imported = JSON.parse(event.target.result);
-                    this.data = imported;
+                    this.data = JSON.parse(event.target.result);
                     this.saveData();
-                    alert('Data imported successfully!');
                     location.reload();
-                } catch (err) {
-                    alert('Error importing data');
+                } catch {
+                    alert('Invalid file');
                 }
             };
             reader.readAsText(file);
@@ -77,9 +83,13 @@ class FinanceApp {
         }
     }
 
-    // ===== INIT =====
+    // ======================
+    // INIT
+    // ======================
     init() {
         this.setupTabs();
+        this.setupExpenses();
+        this.setupBalances();
     }
 
     setupTabs() {
@@ -87,8 +97,11 @@ class FinanceApp {
             btn.addEventListener('click', () => {
                 const tab = btn.dataset.tab;
 
-                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content')
+                    .forEach(t => t.classList.remove('active'));
+
+                document.querySelectorAll('.tab-btn')
+                    .forEach(b => b.classList.remove('active'));
 
                 document.getElementById(tab).classList.add('active');
                 btn.classList.add('active');
@@ -96,27 +109,41 @@ class FinanceApp {
         });
     }
 
-    // ===== EXPENSES =====
-    addExpense(currency) {
-        const date = document.getElementById(`${currency}ExpenseDate`).value;
-        const category = document.getElementById(`${currency}ExpenseCategory`).value;
-        const amount = parseFloat(document.getElementById(`${currency}ExpenseAmount`).value);
-        const notes = document.getElementById(`${currency}ExpenseNotes`)?.value || '';
-
-        this.data.expenses[currency].push({
-            id: Date.now(),
-            date,
-            category,
-            amount,
-            notes
+    // ======================
+    // EXPENSES
+    // ======================
+    setupExpenses() {
+        document.getElementById('usdExpenseForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.addExpense('usd');
+            this.renderExpenses();
         });
 
-        this.saveData();
+        document.getElementById('ilsExpenseForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.addExpense('ils');
+            this.renderExpenses();
+        });
+
         this.renderExpenses();
     }
 
+    addExpense(currency) {
+        this.data.expenses[currency].push({
+            id: Date.now(),
+            date: document.getElementById(`${currency}ExpenseDate`).value,
+            category: document.getElementById(`${currency}ExpenseCategory`).value,
+            amount: parseFloat(document.getElementById(`${currency}ExpenseAmount`).value),
+            notes: document.getElementById(`${currency}ExpenseNotes`)?.value || ''
+        });
+
+        this.saveData();
+    }
+
     deleteExpense(currency, id) {
-        this.data.expenses[currency] = this.data.expenses[currency].filter(e => e.id !== id);
+        this.data.expenses[currency] =
+            this.data.expenses[currency].filter(e => e.id !== id);
+
         this.saveData();
         this.renderExpenses();
     }
@@ -143,9 +170,7 @@ class FinanceApp {
                         <strong>${exp.category}</strong><br>
                         <small>${exp.date}</small>
                     </div>
-                    <div>
-                        ${symbol}${exp.amount.toFixed(2)}
-                    </div>
+                    <div>${symbol}${exp.amount.toFixed(2)}</div>
                     <button onclick="app.deleteExpense('${currency}', ${exp.id})">X</button>
                 `;
 
@@ -160,7 +185,13 @@ class FinanceApp {
         });
     }
 
-    // ===== BALANCES =====
+    // ======================
+    // BALANCES
+    // ======================
+    setupBalances() {
+        this.renderBalances();
+    }
+
     updateBalance(key) {
         const input = document.getElementById(`${key}Input`);
         const value = parseFloat(input.value);
@@ -168,8 +199,19 @@ class FinanceApp {
         if (!isNaN(value)) {
             this.data.balances[key] = value;
             this.saveData();
-            alert('Balance updated');
+            this.renderBalances();
         }
+    }
+
+    renderBalances() {
+        document.getElementById('usdCheckingDisplay').textContent =
+            `$${this.data.balances.usdChecking.toFixed(2)}`;
+
+        document.getElementById('usdSavingsDisplay').textContent =
+            `$${this.data.balances.usdSavings.toFixed(2)}`;
+
+        document.getElementById('ilsDisplay').textContent =
+            `₪${this.data.balances.ils.toFixed(2)}`;
     }
 }
 
