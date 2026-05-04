@@ -1,0 +1,41 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+}
+
+header {
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(90deg, #10b981, #8b5cf6);
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 10px;
+}
+
+.tab-btn {
+  padding: 10px;
+  background: #1e293b;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.tab-btn.active {
+  background: #10b981;
+}
+
+.tab-content {
+  display: none;
+  padding: 20px;
+}
+
+.tab-content.active {
+  display: block;
+}
